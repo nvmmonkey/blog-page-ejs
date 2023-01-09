@@ -1,6 +1,7 @@
 //jshint esversion:6
 // IMPORT ////
 const express = require("express");
+const mongoose = require("mongoose")
 const bodyParser = require("body-parser");
 const ejs = require("ejs");
 const _ = require("lodash")
@@ -10,17 +11,31 @@ const aboutContent = "Hac habitasse platea dictumst vestibulum rhoncus est pelle
 const contactContent = "Scelerisque eleifend donec pretium vulputate sapien. Rhoncus urna neque viverra justo nec ultrices. Arcu dui vivamus arcu felis bibendum. Consectetur adipiscing elit duis tristique. Risus viverra adipiscing at in tellus integer feugiat. Sapien nec sagittis aliquam malesuada bibendum arcu vitae. Consequat interdum varius sit amet mattis. Iaculis nunc sed augue lacus. Interdum posuere lorem ipsum dolor sit amet consectetur adipiscing elit. Pulvinar elementum integer enim neque. Ultrices gravida dictum fusce ut placerat orci nulla. Mauris in aliquam sem fringilla ut morbi tincidunt. Tortor posuere ac ut consequat semper viverra nam libero.";
 
 // SETUP ////
+mongoose.set("strictQuery",false)
+mongoose.connect("mongodb://localhost:27017/blogDB", {useNewUrlParser: true}, ()=>{
+    console.log("Connected to MongoDB ")
+})
 const app = express();
 app.set('view engine', 'ejs');
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(express.static("public"));
-const posts=[]
+
+// Schema Setup ///
+const postSchema = new mongoose.Schema({
+  title: {type: String, required: [true, "Title not found!"]},
+  content: String
+})
+
+const Post = mongoose.model("Post", postSchema)
+
 
 
 
 // GET ////
 app.get("/", function(req, res){
-  res.render("home", {homeStartingContent: homeStartingContent, postArray: posts})
+  Post.find({}, function(err, posts){
+    res.render("home", {homeStartingContent: homeStartingContent, postArray: posts})
+  })
 })
 
 app.get("/about", function(req, res){
@@ -35,24 +50,28 @@ app.get("/compose", function(req, res){
   res.render("compose", {pageTitle: "Compose"})
 })
 
-app.get("/posts/:blogNum", function(req, res){
-  const requestTitle = _.lowerCase(req.params.blogNum)
-  posts.forEach(function(post){
-    const storeTitle = _.lowerCase(post.title)
-    if( storeTitle === requestTitle) {
+app.get("/posts/:postId", function(req, res){
+  const requestPostId = req.params.postId
+  Post.findOne({_id: requestPostId}, function(err, post){
+    if (!err) {
       res.render("post", {pageTitle: post.title, pageContent: post.content})
-    } 
+    }
   })
 })
 
 // POST ////
 app.post("/compose", function(req, res){
-  posts.push({
+  const post = new Post ({
     title: req.body.postTitle,
     content: req.body.postBlog
   })
-  res.redirect("/")
-
+  post.save(function(err){
+    if (!err){
+      res.redirect("/")
+    } else {
+      res.send("Entry Fail, please fill all the info!")
+    }
+  })
 })
 
 
