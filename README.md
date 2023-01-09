@@ -10,6 +10,13 @@ Port is at 3000
 ```
 nodemon app.js
 ```
+## Install MongoDB Community Version
+```
+mongosh
+use blogDB
+```
+
+Install [MongoDB Locally](https://www.mongodb.com/docs/manual/administration/install-community/).
 
 ## Preview Images
 ![Sample1](https://user-images.githubusercontent.com/100928742/209639904-93cbc747-6770-48d5-b58b-cd8b60f77103.png)
